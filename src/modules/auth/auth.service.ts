@@ -1,5 +1,5 @@
 import { pool } from "../../db";
-import type { RUser } from "../../types";
+import type { IUser, RUser } from "../../types";
 import bcrypt from 'bcrypt';
 
 const registerUserIntoDB = async (payload: RUser & { password: string }) => {
@@ -16,6 +16,24 @@ const registerUserIntoDB = async (payload: RUser & { password: string }) => {
     return result;
 };
 
+const ValidateUser = async (email: string, password: string) => {
+    const result = await pool.query(`
+        SELECT * FROM users 
+        WHERE email = $1
+        `, [email])
+
+    if (result.rows.length === 0) {
+        return null
+    }
+
+    const { password: userPassword, ...user } = result.rows[0] as IUser;
+
+    const isValid = await bcrypt.compare(password, userPassword)
+
+    return isValid ? user : null
+}
+
 export const authService = {
-    registerUserIntoDB
+    registerUserIntoDB,
+    ValidateUser,
 };
