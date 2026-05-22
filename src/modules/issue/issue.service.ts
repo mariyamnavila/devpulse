@@ -197,9 +197,19 @@ const updateIssueFromDB = async (payload: UIssue, id: string, user: PayloadUser)
 
 };
 
+const deleteIssueFromDB = async (id: string) => {
+    const result = await pool.query(`
+        DELETE FROM issues
+        WHERE id = $1
+        `, [id])
+
+    return result
+}
+
 export const issueService = {
     createIssueIntoDB,
     getAllIssuesFromDB,
     getSingleIssueFromDB,
     updateIssueFromDB,
+    deleteIssueFromDB,
 }
