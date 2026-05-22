@@ -9,3 +9,24 @@ export interface IIssue {
     created_at: Date;
     updated_at: Date;
 }
+
+export interface IIssueWithReporter {
+    id: number;
+    title: string;
+    description: string;
+    type: "bug" | "feature_request";
+    status: "open" | "in_progress" | "resolved";
+    reporter: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface IIssueQueryParams {
+    sort?: "newest" | "oldest";
+    type?: "bug" | "feature_request";
+    status?: "open" | "in_progress" | "resolved";
+}

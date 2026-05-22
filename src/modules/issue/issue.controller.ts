@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { sendResponse } from "../../utils/sendResponse";
 import { issueService } from "./issue.service";
+import type { IIssueQueryParams, IIssueWithReporter } from "./issue.interface";
 
 const createIssue = async (req: Request, res: Response) => {
     try {
@@ -34,6 +35,27 @@ const createIssue = async (req: Request, res: Response) => {
     }
 }
 
+const getIssues = async (req: Request, res: Response) => {
+    try {
+
+        const result = await issueService.getAllIssuesFromDB(req.query as IIssueQueryParams) as IIssueWithReporter | IIssueWithReporter[];
+
+        sendResponse(res, {
+            success: true,
+            status: 200,
+            data: result
+        })
+    } catch (error) {
+        sendResponse(res, {
+            success: false,
+            status: 500,
+            message: error instanceof Error ? error.message : "Failed to get all issues",
+            errors: error,
+        })
+    }
+}
+
 export const issueController = {
-    createIssue
+    createIssue,
+    getIssues,
 }

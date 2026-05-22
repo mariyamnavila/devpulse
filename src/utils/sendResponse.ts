@@ -3,7 +3,7 @@ import type { Response } from "express";
 interface IResponse<T> {
     success: boolean,
     status: number,
-    message: string,
+    message?: string,
     data?: T,
     errors?: unknown
 }
