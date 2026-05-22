@@ -59,9 +59,10 @@ const getAllIssuesFromDB = async (queryParams: IIssueQueryParams) => {
     ];
 
     const reportersResult = await pool.query(
-        `SELECT id, name, role FROM users WHERE id = ANY($1)`,
-        [reporterIds]
-    );
+        `SELECT id, name, role FROM users 
+        WHERE id = ANY($1)
+        `, [reporterIds]);
+
     const reporters = reportersResult.rows;
 
     // attach reporter data
@@ -92,7 +93,41 @@ const getAllIssuesFromDB = async (queryParams: IIssueQueryParams) => {
 
 };
 
+const getSingleIssueFromDB = async (id: string) => {
+    const singleIssue = await pool.query(`
+        SELECT * FROM issues
+        WHERE id = $1
+        `, [id])
+
+    if (singleIssue.rows.length === 0) {
+        return null;
+    }
+
+    const {
+        reporter_id,
+        created_at,
+        updated_at,
+        ...issueWithoutReportedId
+    } = singleIssue.rows[0];
+
+    const reportersResult = await pool.query(
+        `SELECT id, name, role FROM users 
+        WHERE id = $1`,
+        [reporter_id]
+    );
+
+    const issueWithReporter = {
+        ...issueWithoutReportedId,
+        reporter: reportersResult.rows[0] || null,
+        created_at,
+        updated_at
+    }
+
+    return issueWithReporter
+}
+
 export const issueService = {
     createIssueIntoDB,
-    getAllIssuesFromDB
+    getAllIssuesFromDB,
+    getSingleIssueFromDB,
 }
