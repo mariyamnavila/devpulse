@@ -13,3 +13,5 @@ export interface IUser {
 }
 
 export type RUser = Omit<IUser, "id" | "created_at" | "updated_at" | "password">;
+
+export type PayloadUser = RUser & { id: number };

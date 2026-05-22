@@ -1,10 +1,10 @@
-import type { RUser } from "../types";
+import type { PayloadUser } from "../types";
 
 
 declare global {
     namespace Express {
         interface Request {
-            user?: RUser & { id: number }
+            user?: PayloadUser
         }
     }
 }

@@ -1,7 +1,9 @@
 import { pool } from "../../db";
-import type { IIssue, IIssueQueryParams, IIssueWithReporter } from "./issue.interface";
+import type { PayloadUser } from "../../types";
+import AppError from "../../utils/customError";
+import type { CIssue, IIssue, IIssueQueryParams, IIssueWithReporter, UIssue } from "./issue.interface";
 
-const createIssueIntoDB = async (payload: IIssue, id: number) => {
+const createIssueIntoDB = async (payload: CIssue, id: number) => {
 
     const { title, description, type } = payload
 
@@ -10,7 +12,7 @@ const createIssueIntoDB = async (payload: IIssue, id: number) => {
     }
 
     const result = await pool.query(`
-        InSERT INTO issues(title,description,type,reporter_id)
+        INSERT INTO issues(title,description,type,reporter_id)
         VALUES($1,$2,$3,$4)
         RETURNING *
         `, [title, description, type, id])
@@ -126,8 +128,78 @@ const getSingleIssueFromDB = async (id: string) => {
     return issueWithReporter
 }
 
+const updateIssueFromDB = async (payload: UIssue, id: string, user: PayloadUser) => {
+
+    const { title, description, type, status = "in_progress" } = payload;
+
+    const issueResult = await pool.query(
+        `SELECT * FROM issues WHERE id = $1`,
+        [id]
+    );
+
+    if (issueResult.rows.length === 0) {
+        throw new AppError("Issue not found", 404);
+    }
+
+    const issue: IIssue = issueResult.rows[0];
+
+    if (user.role === "maintainer") {
+
+        if (issue.status === "resolved") {
+            throw new AppError("This issue is already resolved", 409)
+        }
+
+        const result = await pool.query(
+            `
+        UPDATE issues
+        SET title = COALESCE($1, title),
+            description = COALESCE($2, description),
+            type = COALESCE($3, type),
+            status = COALESCE($4, status),
+            updated_at = NOW()
+        WHERE id = $5
+        RETURNING *
+        `,
+            [title, description, type, status, id]
+        );
+        return result.rows[0]
+    }
+
+    if (user.role === "contributor") {
+        const isOwner = issue.reporter_id === user.id
+        const isOpen = issue.status === "open";
+
+        if (!isOwner) {
+            throw new AppError("Contributor can only update their own issues", 403);
+        }
+
+        if (!isOpen) {
+            throw new AppError("Contributor can only update open issues", 403);
+        }
+
+        const result = await pool.query(
+            `
+        UPDATE issues
+        SET title = COALESCE($1, title),
+            description = COALESCE($2, description),
+            type = COALESCE($3, type),
+            updated_at = NOW()
+        WHERE id = $4
+        RETURNING *
+        `,
+            [title, description, type, id]
+        );
+        return result.rows[0]
+
+    }
+
+    throw new AppError("Unauthorized role", 403);
+
+};
+
 export const issueService = {
     createIssueIntoDB,
     getAllIssuesFromDB,
     getSingleIssueFromDB,
+    updateIssueFromDB,
 }

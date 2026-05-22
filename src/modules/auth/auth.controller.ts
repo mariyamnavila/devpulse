@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { authService } from "./auth.service";
 import { sendResponse } from "../../utils/sendResponse";
 import { signToken } from "../../utils/jwt";
+import AppError from "../../utils/customError";
 
 const registerUser = async (req: Request, res: Response) => {
     try {
@@ -24,7 +25,7 @@ const registerUser = async (req: Request, res: Response) => {
     } catch (error) {
         sendResponse(res, {
             success: false,
-            status: 500,
+            status: error instanceof AppError ? error.status : 500,
             message: error instanceof Error ? error.message : "Failed to register user",
             errors: error,
         })
@@ -64,7 +65,7 @@ const loginUser = async (req: Request, res: Response) => {
     } catch (error) {
         sendResponse(res, {
             success: false,
-            status: 500,
+            status: error instanceof AppError ? error.status : 500,
             message: error instanceof Error ? error.message : "Failed to login user",
             errors: error,
         })

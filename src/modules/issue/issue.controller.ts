@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import { sendResponse } from "../../utils/sendResponse";
 import { issueService } from "./issue.service";
 import type { IIssueQueryParams, IIssueWithReporter } from "./issue.interface";
+import type { PayloadUser } from "../../types";
+import AppError from "../../utils/customError";
 
 const createIssue = async (req: Request, res: Response) => {
     try {
@@ -28,7 +30,7 @@ const createIssue = async (req: Request, res: Response) => {
     } catch (error) {
         sendResponse(res, {
             success: false,
-            status: 500,
+            status: error instanceof AppError ? error.status : 500,
             message: error instanceof Error ? error.message : "Failed to create issue",
             errors: error,
         })
@@ -48,7 +50,7 @@ const getIssues = async (req: Request, res: Response) => {
     } catch (error) {
         sendResponse(res, {
             success: false,
-            status: 500,
+            status: error instanceof AppError ? error.status : 500,
             message: error instanceof Error ? error.message : "Failed to get all issues",
             errors: error,
         })
@@ -78,8 +80,30 @@ const getSingleIssue = async (req: Request, res: Response) => {
     } catch (error) {
         sendResponse(res, {
             success: false,
-            status: 500,
+            status: error instanceof AppError ? error.status : 500,
             message: error instanceof Error ? error.message : "Failed to get Single issue",
+            errors: error,
+        })
+    }
+}
+
+const updateIssue = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+        const result = await issueService.updateIssueFromDB(req.body, id as string, user as PayloadUser)
+
+        sendResponse(res, {
+            success: true,
+            status: 200,
+            message: "Issue updated successfully",
+            data: result
+        })
+    } catch (error) {
+        sendResponse(res, {
+            success: false,
+            status: error instanceof AppError ? error.status : 500,
+            message: error instanceof Error ? error.message : "Failed to update issue",
             errors: error,
         })
     }
@@ -89,4 +113,5 @@ export const issueController = {
     createIssue,
     getIssues,
     getSingleIssue,
+    updateIssue,
 }
