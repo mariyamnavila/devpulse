@@ -22,7 +22,7 @@ const createIssue = async (req: Request, res: Response) => {
 
         sendResponse(res, {
             success: true,
-            status: 200,
+            status: 201,
             message: "Issue created successfully",
             data: result.rows[0]
         })
@@ -113,8 +113,6 @@ const deleteIssue = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
         const result = await issueService.deleteIssueFromDB(id as string)
-
-        console.log(result);
 
         if (result.rowCount === 0) {
             sendResponse(res, {

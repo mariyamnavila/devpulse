@@ -11,7 +11,7 @@ export const auth = (...roles: Role[]) => {
 
         if (!token) {
             return sendResponse(res, {
-                status: 401,
+                status: 404,
                 success: false,
                 message: "Token not found",
             })
@@ -44,7 +44,7 @@ export const auth = (...roles: Role[]) => {
         if (roles.length && !roles.includes(user.role)) {
             res.status(403).json({
                 success: false,
-                message: "Forbidden!!, this role have no access"
+                message: "Forbidden! This role have no access"
             })
         }
 
